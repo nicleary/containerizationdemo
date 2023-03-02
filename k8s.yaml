@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container
+  labels:
+    app: container
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: container
+  template:
+    metadata:
+      labels:
+        app: container
+        app.kubernetes.io/name: container
+    spec:
+      containers:
+        - name: container
+          image: harbor.nicleary.com/library/containerdemo:1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "128m"
+            limits:
+              memory: "2048Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: container
+spec:
+  selector:
+    app.kubernetes.io/name: container
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: container
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "containerization.nicleary.com"
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: container
+              port:
+                number: 80
